@@ -151,7 +151,13 @@ The plugin works with [service account tokens](https://kubernetes.io/docs/refere
 
 ##### 2.2.2.2. Change
 
-[time-limited API token](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-an-api-token-for-a-serviceaccount)
+The plugin works with Kubernetes [time-limited API tokens](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#manually-create-an-api-token-for-a-serviceaccount)
+
+Example:
+
+```sh
+kubectl -n $NAMESPACE create token $SERVICEACCOUNTNAME --duration=24h
+```
 
 > [!Note]
 >
