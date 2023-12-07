@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using CyberArk.Extensions.Plugins.Models;
 using CyberArk.Extensions.Utilties.Logger;
 using CyberArk.Extensions.Utilties.Reader;
@@ -188,9 +188,9 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
                 // An exception will be thrown if the parameter does not exist in the account.
                 string targetAddr = ParametersAPI.GetMandatoryParameter("address", TargetAccount.AccountProp);
                 string targetUser = ParametersAPI.GetMandatoryParameter("username", TargetAccount.AccountProp);
-                string targetNamespace = ParametersAPI.GetMandatoryParameter("keyid", TargetAccount.AccountProp);
                 string targetCertValidityDay = ParametersAPI.GetMandatoryParameter("duration", TargetAccount.AccountProp);
                 int targetCertValiditySeconds = Convert.ToInt32(targetCertValidityDay) * 24 * 3600;
+                string kubeVersion = ParametersAPI.GetMandatoryParameter("keyid", TargetAccount.AccountProp);
                 string kubeCsrName = "cyberark.extensions-" + targetUser;
 
                 // Note: To fetch Logon, Reconcile, Master or Usage account properties,
@@ -266,7 +266,7 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
                 CASOSEncryptor encryptor = new CASOSEncryptor();
                 List<string> encryptedDataList = new List<string>
                 {
-                    encryptor.Encrypt(targetNamespace),
+                    encryptor.Encrypt(kubeVersion),
                     encryptor.Encrypt(targetKcReconstructedEncoded)
                 };
                 CPMEncryptedFileWriter cpmEncryptedFileWriter = new CPMEncryptedFileWriter();
