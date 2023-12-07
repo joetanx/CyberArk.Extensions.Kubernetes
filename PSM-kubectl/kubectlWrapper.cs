@@ -13,6 +13,10 @@ namespace kube
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
+        static void DeleteConfigOnExit(string kcName)
+        {
+            if (File.Exists(kcName + ".config")) File.Delete(kcName + ".config");
+        }
         static void InitKubeConfig(string kcName)
         {
             string targetUsername = Environment.GetEnvironmentVariable("TARGETUSERNAME");
@@ -81,7 +85,7 @@ namespace kube
             Console.CancelKeyPress += delegate (object sender, ConsoleCancelEventArgs args)
             {
                 args.Cancel = true;
-                if (!(kubectlRunner == null))
+                try
                 {
                     Process taskkill = new Process
                     {
@@ -93,24 +97,26 @@ namespace kube
                             CreateNoWindow = true
                         }
                     };
-                    if (File.Exists(kcName + ".config")) File.Delete(kcName + ".config");
                     taskkill.Start();
                 }
-                else return;
+                catch (Exception ex)
+                {
+                    return;
+                }
             };
+            AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) => DeleteConfigOnExit(kcName);
             while (!(input == "exit"))
             {
                 input = Console.ReadLine();
                 switch (input)
                 {
                     case null:
-                        if (File.Exists(kcName + ".config")) File.Delete(kcName + ".config");
-                        return;
+                        Console.Write("^C\n\n> ");
+                        break;
                     case "exit":
-                        if (File.Exists(kcName + ".config")) File.Delete(kcName + ".config");
                         break;
                     case "":
-                        Console.Write("> ");
+                        Console.Write("\n> ");
                         break;
                     case var _ when input.Equals("cls") || input.Equals("clear"):
                         Console.Clear();
