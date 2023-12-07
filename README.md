@@ -133,7 +133,7 @@ kubectl -n $NAMESPACE create token $SERVICEACCOUNTNAME --duration=24h
 2. Kubernetes Cluster URL
 3. Namespace
 4. Token Lifetime (Days)
-5. Random alphanumeric string for initialization
+5. Kubernetes Cluster Version
 
 > [!Note]
 >
