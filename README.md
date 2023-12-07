@@ -15,7 +15,7 @@ Tested with:
 
 ### 2.1. KubeConfig
 
-<details><summary><h4>2.1.0. Create user and certificate - example commands</h4></summary>
+<details><summary><h4>2.1.0. Preparing account for onboarding: Create user and certificate - example commands</h4></summary>
 
 Create user and bind to a role/clusterrole:
 
@@ -65,15 +65,15 @@ kubectl certificate approve $CSRNAME
 1. Username
 2. Kubernetes Cluster URL
 3. Certificate Validity (Days)
-4. Random alphanumeric string for initialization
+4. Kubernetes Cluster Version
 
 > [!Note]
 >
 > The method provided by CPM for [returning credentials to CPM](https://docs.cyberark.com/PAS/latest/en/Content/PASIMP/CredentialsGeneratedByTarget.htm) requires the `KeyID` field to be populated
 >
-> To fulfill this requirement:
-> 1. Enter a random string when onboarding the account
-> 2. The plugin is configured to populate this field with a random string during change and reconcile actions
+> The `Kubernetes Cluster Version` field maps to the `KeyID` field
+>
+> This parameter has no real effect on the account, but is required for the `change` and `reconcile` actions to work
 
 #### 2.1.2. Account password
 
@@ -102,7 +102,7 @@ The plugin creates a new user certificate with the following flow:
 
 > [!Note]
 >
-> The kubeconfig file needs to have the appropriate permissions to submit and approve CSR for the change operation to succeed
+> The user principal in the kubeconfig file needs to have the appropriate permissions to submit and approve CSR for the change operation to succeed
 >
 > Otherwise, use reconcile method with another kubeconfig account with the permissions
 
@@ -114,7 +114,7 @@ The plugin creates a new user certificate with the following flow:
 
 ### 2.2. Service Account
 
-<details><summary><h4>2.2.0. Create service account and token - example commands</h4></summary>
+<details><summary><h4>2.2.0. Preparing account for onboarding: Create service account and token - example commands</h4></summary>
 
 ```sh
 NAMESPACE=kube-system
@@ -139,9 +139,9 @@ kubectl -n $NAMESPACE create token $SERVICEACCOUNTNAME --duration=24h
 >
 > The method provided by CPM for [returning credentials to CPM](https://docs.cyberark.com/PAS/latest/en/Content/PASIMP/CredentialsGeneratedByTarget.htm) requires the `KeyID` field to be populated
 >
-> To fulfill this requirement:
-> 1. Enter a random string when onboarding the account
-> 2. The plugin is configured to populate this field with a random string during change and reconcile actions
+> The `Kubernetes Cluster Version` field maps to the `KeyID` field
+>
+> This parameter has no real effect on the account, but is required for the `change` and `reconcile` actions to work
 
 #### 2.2.2. Account password
 
@@ -161,7 +161,7 @@ kubectl -n $NAMESPACE create token $SERVICEACCOUNTNAME --duration=24h
 
 > [!Note]
 >
-> The service needs to have the appropriate permissions to create tokens for the change operation to succeed
+> The service account needs to have the appropriate permissions to create tokens for the change operation to succeed
 >
 > Otherwise, use reconcile method with a kubeconfig account with the permissions
 
