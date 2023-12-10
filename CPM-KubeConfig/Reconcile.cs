@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using CyberArk.Extensions.Infra.Common;
 using CyberArk.Extensions.Utilties;
+using System.Linq;
 
 // Change the Template name space
 namespace CyberArk.Extensions.KubernetesKubeConfig
@@ -96,7 +97,27 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
             string responseBody = await response.Content.ReadAsStringAsync();
             return responseBody;
         }
-        static Tuple<string, string> GenKeyPairAndCsr(string targetUser, int keySize)
+        static string MakeCertSubject(string targetUser, string targetGroupsCommaSeparated)
+        {
+            if (!(targetGroupsCommaSeparated == null))
+            {
+                string[] targetGroupsArray = targetGroupsCommaSeparated.Split(',');
+                foreach (int count in Enumerable.Range(0, targetGroupsArray.Length))
+                    targetGroupsArray[count] = "O=" + targetGroupsArray[count];
+                List<string> targetGroupsList = new List<string>(targetGroupsArray)
+                {
+                    "CN=" + targetUser
+                };
+                string subjectName = string.Join(",", targetGroupsList);
+                return subjectName;
+            }
+            else
+            {
+                string subjectName = "CN=" + targetUser;
+                return subjectName;
+            }
+        }
+        static Tuple<string, string> GenKeyPairAndCsr(string subjectName, int keySize)
         {
             // Generate RSA key pair, flow: RSACryptoServiceProvider → RSAParameters → BouncyCastle AsymmetricCipherKeyPair → base64 encode
             RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(keySize);
@@ -105,7 +126,7 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
             string keyPairEncoded = GetPemBase64Encoded(keyPair);
 
             // Generate CSR with rsaParam from above, then base64 encode it
-            CertificateRequest certRequest = new CertificateRequest("CN=" + targetUser, RSA.Create(rsaParam), new HashAlgorithmName("SHA256"), RSASignaturePadding.Pkcs1);
+            CertificateRequest certRequest = new CertificateRequest(subjectName, RSA.Create(rsaParam), new HashAlgorithmName("SHA256"), RSASignaturePadding.Pkcs1);
             byte[] pkcs10 = certRequest.CreateSigningRequest();
             string csr = "-----BEGIN CERTIFICATE REQUEST-----\n" + SpliceText(Convert.ToBase64String(pkcs10)) + "\n-----END CERTIFICATE REQUEST-----";
             string csrEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(csr));
@@ -188,6 +209,9 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
                 // An exception will be thrown if the parameter does not exist in the account.
                 string targetAddr = ParametersAPI.GetMandatoryParameter("address", TargetAccount.AccountProp);
                 string targetUser = ParametersAPI.GetMandatoryParameter("username", TargetAccount.AccountProp);
+                string targetGroupsCommaSeparated = null;
+                try { targetGroupsCommaSeparated = ParametersAPI.GetMandatoryParameter("scope", TargetAccount.AccountProp); }
+                catch (Exception ex) { }
                 string targetCertValidityDay = ParametersAPI.GetMandatoryParameter("duration", TargetAccount.AccountProp);
                 int targetCertValiditySeconds = Convert.ToInt32(targetCertValidityDay) * 24 * 3600;
                 string kubeVersion = ParametersAPI.GetMandatoryParameter("keyid", TargetAccount.AccountProp);
@@ -234,7 +258,8 @@ namespace CyberArk.Extensions.KubernetesKubeConfig
                     string responseDeleteCsr = HttpDelete(client, requestUriDeleteCsr).GetAwaiter().GetResult();
                 }
 
-                Tuple<string, string> keyPairAndCsr = GenKeyPairAndCsr(targetUser, 2048);
+                string subjectName = MakeCertSubject(targetUser, targetGroupsCommaSeparated);
+                Tuple<string, string> keyPairAndCsr = GenKeyPairAndCsr(subjectName, 2048);
 
                 // Create CSR in Kubernetes using the key pair and CSR
                 string postBodyCreateCsr = "{\"apiVersion\":\"certificates.k8s.io/v1\",\"kind\":\"CertificateSigningRequest\",\"metadata\":{\"name\":\"" + kubeCsrName + "\"},\"spec\":{\"request\":\"" + keyPairAndCsr.Item2 + "\",\"signerName\":\"kubernetes.io/kube-apiserver-client\",\"expirationSeconds\":" + targetCertValiditySeconds + ",\"usages\":[\"client auth\"]}}";
