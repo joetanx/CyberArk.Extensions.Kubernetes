@@ -13,6 +13,14 @@ Tested with:
 
 ## 2. CPM Plugins
 
+### Dependent Libraries
+
+|Name|Publisher|Version|Purpose|Link|
+|---|---|---|---|---|
+|BouncyCastle.Cryptography.dll|Legion of The Bouncy Castle Inc.|2.2.1.47552|Certificate operations|https://www.bouncycastle.org/csharp/|
+|Newtonsoft.Json.dll|Newtonsoft|13.0.3.27908|Parse json data|https://www.newtonsoft.com/json|
+|YamlDotNet.dll|Antoine Aubry|13.7.1.0|Parse yaml data|https://github.com/aaubry/YamlDotNet|
+
 ### 2.1. KubeConfig
 
 <details><summary><h4>2.1.0. Preparing account for onboarding: Create user and certificate - example commands</h4></summary>
@@ -64,8 +72,9 @@ kubectl certificate approve $CSRNAME
 
 1. Username
 2. Kubernetes Cluster URL
-3. Certificate Validity (Days)
-4. Kubernetes Cluster Version
+3. Groups (comma separated)
+4. Certificate Validity (Days)
+5. Kubernetes Cluster Version
 
 > [!Note]
 >
